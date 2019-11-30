@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-cn"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="origin">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <title>Kafka在windows下的配置使用 - 行而思 - 博客园</title>
+    <meta property="og:description" content="Kafka是最初由Linkedin公司开发，是一个分布式、支持分区的（partition）、多副本的（replica），基于zookeeper协调的分布式消息系统，它的最大的特性就是可以实时的处理大量">
+    <link type="text/css" rel="stylesheet" href="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/blog-common.css">
+<link id="MainCss" type="text/css" rel="stylesheet" href="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/style2.css">
+<link id="mobile-style" media="only screen and (max-width: 767px)" type="text/css" rel="stylesheet" href="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/bundle-BOOK-mobile.css">
+    <link title="RSS" type="application/rss+xml" rel="alternate" href="https://www.cnblogs.com/shej123/rss">
+    <link title="RSD" type="application/rsd+xml" rel="EditURI" href="https://www.cnblogs.com/shej123/rsd.xml">
+<link type="application/wlwmanifest+xml" rel="wlwmanifest" href="https://www.cnblogs.com/shej123/wlwmanifest.xml">
+    <script src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/amp4ads-host-v0.js"></script><script src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/pubads_impl_rendering_2019061701.js"></script><script async="" src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/analytics.js"></script><script type="text/javascript" src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/encoder.js"></script><script src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/jquery-2.js"></script>
+    <script>var currentBlogId=213415;var currentBlogApp='shej123',cb_enable_mathjax=false;var isLogined=false;</script>
+    <script src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/blog-common.js" type="text/javascript"></script>
+<link rel="preload" href="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/integrator.js" as="script"><script type="text/javascript" src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/integrator.js"></script><script src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/pubads_impl_2019061701.js" async=""></script></head>
+<body>
+<a name="top"></a>
+
+
+<script type="text/javascript">
+	try {
+		if (screen.availWidth > 1200) {
+			document.getElementById("MainCss").href = '/Skins/BOOK/style2.css';
+		}
+	} catch (e) { }
+</script>
+
+<div id="header">
+<div id="HeaderTitle">
+<div id="Title">
+<a id="Header1_HeaderTitle" class="headermaintitle" href="https://www.cnblogs.com/shej123/">行而思</a>
+</div>
+<div id="subTitle"></div>
+</div>
+</div>
+
+<div id="main">
+	
+        <div id="post_detail">
+	<div class="post">
+		<h2>
+			<a id="cb_post_title_url" href="https://www.cnblogs.com/shej123/p/10277653.html">Kafka在windows下的配置使用</a>
+		</h2>
+		<div id="cnblogs_post_body" class="blogpost-body"><p>Kafka是最初由Linkedin
+公司开发，是一个分布式、支持分区的（partition）、多副本的（replica），基于zookeeper协调的分布式消息系统，它的最大的特性
+就是可以实时的处理大量数据以满足各种需求场景：比如基于hadoop的批处理系统、低延迟的实时系统、storm/Spark流式处理引擎，web
+/nginx日志、访问日志，消息服务等等，用scala语言编写，Linkedin于2010年贡献给了Apache基金会并成为顶级开源 
+项目。具体理论性的内容我也不是特别懂，这里有一篇文章写的很好，转发一下https://blog.csdn.net/YChenFeng
+/article/details/74980531</p>
+<p>下面就开始配置和使用</p>
+<p>1、下载</p>
+<p>下载地址：http://kafka.apache.org/downloads.html ，我用的是kafka_2.12-1.0.0.tgz版本。有兴趣的可以下载最新办法。</p>
+<p>2、下载完成之后，直接解压，目录结构是这样的</p>
+<p><img src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/717943-20190116154624588-1082034988.png" alt=""></p>
+<p>bin目录是各种启动文件，config是相关参数配置文件，logs是自建的日志文件，libs是使用到的相关jar文件</p>
+<p><img src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/717943-20190116154845549-1063775611.png" alt=""></p>
+<p>启动文件中有windows项，用例直接启动相关服务。</p>
+<p>3、修改配置参数</p>
+<p>进入config目录，编辑 server.properties文件，找到并编辑log.dirs= D:\\Tools\\kafka_2.11-1.0.0\\logs，找到并编辑zookeeper.connect=localhost:2181。表示本地运行。</p>
+<p>(Kafka会按照默认，在9092端口上运行，并连接zookeeper的默认端口：2181)</p>
+<p>4、启动服务，在dos服务下输入下面命令进行启动</p>
+<p>D:\tools\kafka_2.12-2.1.0\bin\windows\zookeeper-server-start.bat D:\tools\kafka_2.12-2.1.0\config\zookeeper.properties</p>
+<p>首先启动，zookeeper服务，对应加载zookeeper的配置文件，kafka依赖zookeeper监控其状态</p>
+<p>D:\tools\kafka_2.12-2.1.0\bin\windows\kafka-server-start.bat D:\tools\kafka_2.12-2.1.0\config\server.properties</p>
+<p>然后启动kafka服务，对应加载相应配置文件</p>
+<p><img src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/717943-20190116155451264-2023792969.png" alt=""></p>
+<p>&nbsp;</p>
+<p>&nbsp;5、使用idea在git 上下载kafka-monitor 代码，地址：https://github.com/linxin26/kafka-monitor</p>
+<p>运行Start,在浏览器输入http://127.0.0.1:5050</p>
+<p><img src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/717943-20190116160512733-1429663730.png" alt=""></p>
+<p>查看现有主题 topic</p>
+<p><img src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/717943-20190116160843337-410497032.png" alt=""></p>
+<p>查看 broker</p>
+<p><img src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/717943-20190116160948439-2073132020.png" alt=""></p>
+<p>6、编写测试类查看相关状况</p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="color: #0000ff;">import</span><span style="color: #000000;"> org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> org.apache.kafka.clients.consumer.ConsumerRecord;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> org.apache.kafka.clients.consumer.ConsumerRecords;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> org.apache.kafka.clients.consumer.KafkaConsumer;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> org.apache.kafka.common.TopicPartition;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.util.Arrays;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.util.Collection;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.util.Properties;
+
+</span><span style="color: #008000;">/**</span><span style="color: #008000;">
+ * Created by songxiaofei on 2018-12-27.
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> ConsumerMessage {
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> main(String[] args){
+        Properties props </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> Properties();
+        props.put(</span>"bootstrap.servers", "10.1.9.3:9092"<span style="color: #000000;">);
+        props.put(</span>"group.id", "test"<span style="color: #000000;">);
+        props.put(</span>"enable.auto.commit", "true"<span style="color: #000000;">);
+        props.put(</span>"auto.commit.interval.ms", "1000"<span style="color: #000000;">);
+        props.put(</span>"key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer"<span style="color: #000000;">);
+        props.put(</span>"value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer"<span style="color: #000000;">);
+        </span><span style="color: #0000ff;">final</span> KafkaConsumer&lt;String, String&gt; consumer = <span style="color: #0000ff;">new</span> KafkaConsumer&lt;String,String&gt;<span style="color: #000000;">(props);
+        consumer.subscribe(Arrays.asList(</span>"buy"),<span style="color: #0000ff;">new</span><span style="color: #000000;"> ConsumerRebalanceListener() {
+            </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> onPartitionsRevoked(Collection&lt;TopicPartition&gt;<span style="color: #000000;"> collection) {
+            }
+            </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> onPartitionsAssigned(Collection&lt;TopicPartition&gt;<span style="color: #000000;"> collection) {
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">将偏移设置到最开始</span>
+<span style="color: #000000;">                consumer.seekToBeginning(collection);
+            }
+        });
+        </span><span style="color: #0000ff;">while</span> (<span style="color: #0000ff;">true</span><span style="color: #000000;">) {
+            ConsumerRecords</span>&lt;String, String&gt; records = consumer.poll(100<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">for</span> (ConsumerRecord&lt;String, String&gt;<span style="color: #000000;"> record : records)
+                System.out.printf(</span>"offset = %d, key = %s, value = %s%n,checksum=%s"<span style="color: #000000;">, record.offset(), record.key(), record.value(),record.checksum());
+        }
+    }
+}</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p>执行代码，可以查看相关日志，用来查看kafka的配置情况</p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre>D:\tools\Java\jdk1.8.0_31\bin\java "-javaagent:D:\tools\JetBrains\IntelliJ IDEA 2018.1\lib\idea_rt.jar=64422:D:\tools\JetBrains\IntelliJ IDEA 2018.1\bin" -Dfile.encoding=UTF-8 -classpath D:\tools\Java\jdk1.8.0_31\jre\lib\charsets.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\deploy.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\ext\access-bridge-64.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\ext\cldrdata.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\ext\dnsns.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\ext\jaccess.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\ext\jfxrt.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\ext\localedata.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\ext\nashorn.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\ext\sunec.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\ext\sunjce_provider.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\ext\sunmscapi.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\ext\sunpkcs11.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\ext\zipfs.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\javaws.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\jce.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\jfr.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\jfxswt.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\jsse.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\management-agent.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\plugin.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\resources.jar;D:\tools\Java\jdk1.8.0_31\jre\lib\rt.jar;E:\jetproject\kafka-monitor-master\target\classes;E:\mavrepository\.m2\repository\org\apache\kafka\kafka-clients\0.10.0.1\kafka-clients-0.10.0.1.jar;E:\mavrepository\.m2\repository\net\jpountz\lz4\lz4\1.3.0\lz4-1.3.0.jar;E:\mavrepository\.m2\repository\org\xerial\snappy\snappy-java\1.1.2.6\snappy-java-1.1.2.6.jar;E:\mavrepository\.m2\repository\org\apache\commons\commons-lang3\3.5\commons-lang3-3.5.jar;E:\mavrepository\.m2\repository\org\apache\kafka\kafka_2.10\0.10.0.1\kafka_2.10-0.10.0.1.jar;E:\mavrepository\.m2\repository\com\101tec\zkclient\0.8\zkclient-0.8.jar;E:\mavrepository\.m2\repository\org\scala-lang\scala-library\2.10.6\scala-library-2.10.6.jar;E:\mavrepository\.m2\repository\com\yammer\metrics\metrics-core\2.2.0\metrics-core-2.2.0.jar;E:\mavrepository\.m2\repository\net\sf\jopt-simple\jopt-simple\4.9\jopt-simple-4.9.jar;E:\mavrepository\.m2\repository\com\alibaba\fastjson\1.2.22\fastjson-1.2.22.jar;E:\mavrepository\.m2\repository\org\slf4j\slf4j-api\1.6.2\slf4j-api-1.6.2.jar;E:\mavrepository\.m2\repository\org\slf4j\slf4j-log4j12\1.6.2\slf4j-log4j12-1.6.2.jar;E:\mavrepository\.m2\repository\commons-logging\commons-logging-api\1.1\commons-logging-api-1.1.jar;E:\mavrepository\.m2\repository\log4j\log4j\1.2.16\log4j-1.2.16.jar;E:\mavrepository\.m2\repository\mysql\mysql-connector-java\5.1.40\mysql-connector-java-5.1.40.jar;E:\mavrepository\.m2\repository\org\apache\curator\curator-framework\2.10.0\curator-framework-2.10.0.jar;E:\mavrepository\.m2\repository\org\apache\curator\curator-client\2.10.0\curator-client-2.10.0.jar;E:\mavrepository\.m2\repository\com\google\guava\guava\16.0.1\guava-16.0.1.jar;E:\mavrepository\.m2\repository\org\apache\zookeeper\zookeeper\3.4.8\zookeeper-3.4.8.jar;E:\mavrepository\.m2\repository\jline\jline\0.9.94\jline-0.9.94.jar;E:\mavrepository\.m2\repository\io\netty\netty\3.7.0.Final\netty-3.7.0.Final.jar;E:\mavrepository\.m2\repository\org\apache\curator\curator-recipes\2.10.0\curator-recipes-2.10.0.jar;E:\mavrepository\.m2\repository\org\jolokia\jolokia-jvm\1.3.5\jolokia-jvm-1.3.5.jar;E:\mavrepository\.m2\repository\org\jolokia\jolokia-core\1.5.0\jolokia-core-1.5.0.jar;E:\mavrepository\.m2\repository\com\googlecode\json-simple\json-simple\1.1.1\json-simple-1.1.1.jar;D:\tools\Java\jdk1.8.0_31\lib\tools.jar;E:\mavrepository\.m2\repository\org\projectlombok\lombok\1.16.18\lombok-1.16.18.jar;E:\mavrepository\.m2\repository\org\springframework\boot\spring-boot-starter-web\2.0.0.RELEASE\spring-boot-starter-web-2.0.0.RELEASE.jar;E:\mavrepository\.m2\repository\org\springframework\boot\spring-boot-starter\2.0.0.RELEASE\spring-boot-starter-2.0.0.RELEASE.jar;E:\mavrepository\.m2\repository\org\springframework\boot\spring-boot\2.0.0.RELEASE\spring-boot-2.0.0.RELEASE.jar;E:\mavrepository\.m2\repository\org\springframework\boot\spring-boot-autoconfigure\2.0.0.RELEASE\spring-boot-autoconfigure-2.0.0.RELEASE.jar;E:\mavrepository\.m2\repository\org\springframework\boot\spring-boot-starter-logging\2.0.0.RELEASE\spring-boot-starter-logging-2.0.0.RELEASE.jar;E:\mavrepository\.m2\repository\org\apache\logging\log4j\log4j-to-slf4j\2.10.0\log4j-to-slf4j-2.10.0.jar;E:\mavrepository\.m2\repository\org\apache\logging\log4j\log4j-api\2.10.0\log4j-api-2.10.0.jar;E:\mavrepository\.m2\repository\org\slf4j\jul-to-slf4j\1.7.25\jul-to-slf4j-1.7.25.jar;E:\mavrepository\.m2\repository\javax\annotation\javax.annotation-api\1.3.2\javax.annotation-api-1.3.2.jar;E:\mavrepository\.m2\repository\org\springframework\spring-core\5.0.4.RELEASE\spring-core-5.0.4.RELEASE.jar;E:\mavrepository\.m2\repository\org\springframework\spring-jcl\5.0.4.RELEASE\spring-jcl-5.0.4.RELEASE.jar;E:\mavrepository\.m2\repository\org\yaml\snakeyaml\1.19\snakeyaml-1.19.jar;E:\mavrepository\.m2\repository\org\springframework\boot\spring-boot-starter-json\2.0.0.RELEASE\spring-boot-starter-json-2.0.0.RELEASE.jar;E:\mavrepository\.m2\repository\com\fasterxml\jackson\core\jackson-databind\2.9.4\jackson-databind-2.9.4.jar;E:\mavrepository\.m2\repository\com\fasterxml\jackson\core\jackson-annotations\2.9.0\jackson-annotations-2.9.0.jar;E:\mavrepository\.m2\repository\com\fasterxml\jackson\core\jackson-core\2.9.4\jackson-core-2.9.4.jar;E:\mavrepository\.m2\repository\com\fasterxml\jackson\datatype\jackson-datatype-jdk8\2.9.4\jackson-datatype-jdk8-2.9.4.jar;E:\mavrepository\.m2\repository\com\fasterxml\jackson\datatype\jackson-datatype-jsr310\2.9.4\jackson-datatype-jsr310-2.9.4.jar;E:\mavrepository\.m2\repository\com\fasterxml\jackson\module\jackson-module-parameter-names\2.9.4\jackson-module-parameter-names-2.9.4.jar;E:\mavrepository\.m2\repository\org\springframework\boot\spring-boot-starter-tomcat\2.0.0.RELEASE\spring-boot-starter-tomcat-2.0.0.RELEASE.jar;E:\mavrepository\.m2\repository\org\apache\tomcat\embed\tomcat-embed-core\8.5.28\tomcat-embed-core-8.5.28.jar;E:\mavrepository\.m2\repository\org\apache\tomcat\embed\tomcat-embed-el\8.5.28\tomcat-embed-el-8.5.28.jar;E:\mavrepository\.m2\repository\org\apache\tomcat\embed\tomcat-embed-websocket\8.5.28\tomcat-embed-websocket-8.5.28.jar;E:\mavrepository\.m2\repository\org\hibernate\validator\hibernate-validator\6.0.7.Final\hibernate-validator-6.0.7.Final.jar;E:\mavrepository\.m2\repository\javax\validation\validation-api\2.0.1.Final\validation-api-2.0.1.Final.jar;E:\mavrepository\.m2\repository\org\jboss\logging\jboss-logging\3.3.2.Final\jboss-logging-3.3.2.Final.jar;E:\mavrepository\.m2\repository\com\fasterxml\classmate\1.3.4\classmate-1.3.4.jar;E:\mavrepository\.m2\repository\org\springframework\spring-web\5.0.4.RELEASE\spring-web-5.0.4.RELEASE.jar;E:\mavrepository\.m2\repository\org\springframework\spring-beans\5.0.4.RELEASE\spring-beans-5.0.4.RELEASE.jar;E:\mavrepository\.m2\repository\org\springframework\spring-webmvc\5.0.4.RELEASE\spring-webmvc-5.0.4.RELEASE.jar;E:\mavrepository\.m2\repository\org\springframework\spring-aop\5.0.4.RELEASE\spring-aop-5.0.4.RELEASE.jar;E:\mavrepository\.m2\repository\org\springframework\spring-context\5.0.4.RELEASE\spring-context-5.0.4.RELEASE.jar;E:\mavrepository\.m2\repository\org\springframework\spring-expression\5.0.4.RELEASE\spring-expression-5.0.4<span style="color: #000000;">.RELEASE.jar co.solinx.kafka.monitor.ConsumerMessage
+log4j:WARN No such property [maxFileSize] in org.apache.log4j.DailyRollingFileAppender.
+log4j:WARN No such property [maxBackupIndex] in org.apache.log4j.DailyRollingFileAppender.
+</span>2019-01-16 15:56:36,600 [main] [org.apache.kafka.clients.consumer.ConsumerConfig]-<span style="color: #000000;">[INFO] ConsumerConfig values: 
+    metric.reporters </span>=<span style="color: #000000;"> []
+    metadata.max.age.ms </span>= 300000<span style="color: #000000;">
+    partition.assignment.strategy </span>=<span style="color: #000000;"> [org.apache.kafka.clients.consumer.RangeAssignor]
+    reconnect.backoff.ms </span>= 50<span style="color: #000000;">
+    sasl.kerberos.ticket.renew.window.factor </span>= 0.8<span style="color: #000000;">
+    max.partition.fetch.bytes </span>= 1048576<span style="color: #000000;">
+    bootstrap.servers </span>= [10.1.9.3:9092<span style="color: #000000;">]
+    ssl.keystore.type </span>=<span style="color: #000000;"> JKS
+    enable.auto.commit </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">
+    sasl.mechanism </span>=<span style="color: #000000;"> GSSAPI
+    interceptor.classes </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">
+    exclude.internal.topics </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">
+    ssl.truststore.password </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">
+    client.id </span>=<span style="color: #000000;"> 
+    ssl.endpoint.identification.algorithm </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">
+    max.poll.records </span>= 2147483647<span style="color: #000000;">
+    check.crcs </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">
+    request.timeout.ms </span>= 40000<span style="color: #000000;">
+    heartbeat.interval.ms </span>= 3000<span style="color: #000000;">
+    auto.commit.interval.ms </span>= 1000<span style="color: #000000;">
+    receive.buffer.bytes </span>= 65536<span style="color: #000000;">
+    ssl.truststore.type </span>=<span style="color: #000000;"> JKS
+    ssl.truststore.location </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">
+    ssl.keystore.password </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">
+    fetch.min.bytes </span>= 1<span style="color: #000000;">
+    send.buffer.bytes </span>= 131072<span style="color: #000000;">
+    value.deserializer </span>= <span style="color: #0000ff;">class</span><span style="color: #000000;"> org.apache.kafka.common.serialization.StringDeserializer
+    group.id </span>=<span style="color: #000000;"> test
+    retry.backoff.ms </span>= 100<span style="color: #000000;">
+    sasl.kerberos.kinit.cmd </span>= /usr/bin/<span style="color: #000000;">kinit
+    sasl.kerberos.service.name </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">
+    sasl.kerberos.ticket.renew.jitter </span>= 0.05<span style="color: #000000;">
+    ssl.trustmanager.algorithm </span>=<span style="color: #000000;"> PKIX
+    ssl.key.password </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">
+    fetch.max.wait.ms </span>= 500<span style="color: #000000;">
+    sasl.kerberos.min.time.before.relogin </span>= 60000<span style="color: #000000;">
+    connections.max.idle.ms </span>= 540000<span style="color: #000000;">
+    session.timeout.ms </span>= 30000<span style="color: #000000;">
+    metrics.num.samples </span>= 2<span style="color: #000000;">
+    key.deserializer </span>= <span style="color: #0000ff;">class</span><span style="color: #000000;"> org.apache.kafka.common.serialization.StringDeserializer
+    ssl.protocol </span>=<span style="color: #000000;"> TLS
+    ssl.provider </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">
+    ssl.enabled.protocols </span>= [TLSv1.2, TLSv1.1<span style="color: #000000;">, TLSv1]
+    ssl.keystore.location </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">
+    ssl.cipher.suites </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">
+    security.protocol </span>=<span style="color: #000000;"> PLAINTEXT
+    ssl.keymanager.algorithm </span>=<span style="color: #000000;"> SunX509
+    metrics.sample.window.ms </span>= 30000<span style="color: #000000;">
+    auto.offset.reset </span>= latest</pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p>&nbsp;7、使用命令行创建topic</p>
+<p>D:\tools\kafka_2.12-2.1.0\bin\windows\kafka-topics.bat --create 
+--zookeeper localhost:12181 --replication-factor 1 --partitions 1 
+--topic hello</p>
+<p><img src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/717943-20190116163941615-1477894959.png" alt=""></p>
+<p>查看已有的topic</p>
+<p>D:\tools\kafka_2.12-2.1.0\bin\windows\kafka-topics.bat --list --zookeeper 127.0.0.1:12181</p>
+<p>&nbsp;<img src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/717943-20190116164025214-519306626.png" alt=""></p>
+<p>创建一个消息生产者，同时创建一个消息消费者，去接收消息生产者发来的消息</p>
+<p>D:\tools\kafka_2.12-2.1.0\bin\windows\kafka-console-producer.bat --broker-list 127.0.0.1:9092 --topic hello&nbsp;&nbsp;创建一个消息生产者</p>
+<p>D:\tools\kafka_2.12-2.1.0\bin\windows\kafka-console-consumer.bat 
+--bootstrap-server 127.0.0.1:9092 --topic hello 
+--from-beginning&nbsp;创建一个消息消费者</p>
+<p><img src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/717943-20190116164515932-1124781749.png" alt=""></p>
+<p>&nbsp;</p></div><div id="MySignature"></div>
+<div class="clear"></div>
+<div id="blog_post_info_block">
+<div id="BlogPostCategory"></div>
+<div id="EntryTag"></div>
+<div id="blog_post_info"><div id="green_channel">
+        <a href="javascript:void(0);" id="green_channel_digg" onclick="DiggIt(10277653,cb_blogId,1);green_channel_success(this,'谢谢推荐！');">好文要顶</a>
+            <a id="green_channel_follow" onclick="follow('2257127b-23a5-e411-b908-9dcfd8948a71');" href="javascript:void(0);">关注我</a>
+    <a id="green_channel_favorite" onclick="AddToWz(cb_entryId);return false;" href="javascript:void(0);">收藏该文</a>
+    <a id="green_channel_weibo" href="javascript:void(0);" title="分享至新浪微博" onclick="ShareToTsina()"><img src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/icon_weibo_24.png" alt=""></a>
+    <a id="green_channel_wechat" href="javascript:void(0);" title="分享至微信" onclick="shareOnWechat()"><img src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/wechat.png" alt=""></a>
+</div>
+<div id="author_profile">
+    <div id="author_profile_info" class="author_profile_info">
+            <a href="https://home.cnblogs.com/u/shej123/" target="_blank"><img src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/20150126144504.png" class="author_avatar" alt=""></a>
+        <div id="author_profile_detail" class="author_profile_info">
+            <a href="https://home.cnblogs.com/u/shej123/">行而思</a><br>
+            <a href="https://home.cnblogs.com/u/shej123/followees">关注 - 7</a><br>
+            <a href="https://home.cnblogs.com/u/shej123/followers">粉丝 - 0</a>
+        </div>
+    </div>
+    <div class="clear"></div>
+    <div id="author_profile_honor"></div>
+    <div id="author_profile_follow">
+                <a href="javascript:void(0);" onclick="follow('2257127b-23a5-e411-b908-9dcfd8948a71');return false;">+加关注</a>
+    </div>
+</div>
+<div id="div_digg">
+    <div class="diggit" onclick="votePost(10277653,'Digg')">
+        <span class="diggnum" id="digg_count">0</span>
+    </div>
+    <div class="buryit" onclick="votePost(10277653,'Bury')">
+        <span class="burynum" id="bury_count">0</span>
+    </div>
+    <div class="clear"></div>
+    <div class="diggword" id="digg_tips">
+    </div>
+</div>
+<script type="text/javascript">
+    currentDiggType = 0;
+</script></div>
+<div class="clear"></div>
+<div id="post_next_prev"><a href="https://www.cnblogs.com/shej123/p/10275184.html" class="p_n_p_prefix">« </a> 上一篇：<a href="https://www.cnblogs.com/shej123/p/10275184.html" title="发布于2019-01-16 09:03">2018年年终总结</a><br><a href="https://www.cnblogs.com/shej123/p/10281373.html" class="p_n_p_prefix">» </a> 下一篇：<a href="https://www.cnblogs.com/shej123/p/10281373.html" title="发布于2019-01-17 11:37">editplus的使用技巧</a><br></div>
+</div>
+
+
+		<p class="postfoot">
+			posted on <span id="post-date">2019-01-16 16:16</span> <a href="https://www.cnblogs.com/shej123/">行而思</a> 阅读(<span id="post_view_count">209</span>) 评论(<span id="post_comment_count">0</span>)  <a href="https://i.cnblogs.com/EditPosts.aspx?postid=10277653" rel="nofollow">编辑</a> <a href="#" onclick="AddToWz(10277653);return false;">收藏</a>
+		</p>
+	</div>
+	<script type="text/javascript">var allowComments=true,cb_blogId=213415,cb_entryId=10277653,cb_blogApp=currentBlogApp,cb_blogUserGuid='2257127b-23a5-e411-b908-9dcfd8948a71',cb_entryCreatedDate='2019/1/16 16:16:00';loadViewCount(cb_entryId);var cb_postType=1;var isMarkdown=false;</script>
+	
+	</div><a name="!comments"></a><div id="blog-comments-placeholder"></div><script type="text/javascript">var commentManager = new blogCommentManager();commentManager.renderComments(0);</script>
+<div id="comment_form" class="commentform">
+<a name="commentform"></a>
+<div id="divCommentShow"></div>
+<div id="comment_nav"><span id="span_refresh_tips"></span><a href="javascript:void(0);" onclick="return RefreshCommentList();" id="lnk_RefreshComments" runat="server" clientidmode="Static">刷新评论</a><a href="#" onclick="return RefreshPage();">刷新页面</a><a href="#top">返回顶部</a></div>
+<div id="comment_form_container"><div class="login_tips">注册用户登录后才能发表评论，请 <a rel="nofollow" href="javascript:void(0);" class="underline" onclick="return login('commentform');">登录</a> 或 <a rel="nofollow" href="javascript:void(0);" class="underline" onclick="return register();">注册</a>，<a href="http://www.cnblogs.com/">访问</a>网站首页。</div></div>
+<div class="ad_text_commentbox" id="ad_text_under_commentbox"></div>
+<div id="ad_t2"><a href="http://www.ucancode.com/index.htm" target="_blank" onclick="ga('send', 'event', 'Link', 'click', 'T2-工控')">【推荐】超50万C++/C#源码: 大型实时仿真组态图形源码</a><br><a href="https://www.grapecity.com.cn/developer/spreadjs?utm_source=cnblogs&amp;utm_medium=blogpage&amp;utm_term=bottom&amp;utm_content=SpreadJS&amp;utm_campaign=community" target="_blank" onclick="ga('send', 'event', 'Link', 'click', 'T2-SpreadJS')">【前端】SpreadJS表格控件，可嵌入系统开发的在线Excel</a><br><a href="https://gitee.com/enterprises?from=bky-1" target="_blank" onclick="ga('send', 'event', 'Link', 'click', 'T2-gitee')">【推荐】码云企业版，高效的企业级软件协作开发管理平台</a><br><a href="https://q.cnblogs.com/" target="_blank" onclick="ga('send', 'event', 'Link', 'click', 'T2-博问')">【推荐】程序员问答平台，解决您开发中遇到的技术难题</a><br></div>
+<div id="opt_under_post"></div>
+<script async="async" src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/gpt.js"></script>
+<script>
+  var googletag = googletag || {};
+  googletag.cmd = googletag.cmd || [];
+</script>
+<script>
+  googletag.cmd.push(function() {
+        googletag.defineSlot('/1090369/C1', [300, 250], 'div-gpt-ad-1546353474406-0').addService(googletag.pubads());
+        googletag.defineSlot('/1090369/C2', [468, 60], 'div-gpt-ad-1539008685004-0').addService(googletag.pubads());
+        googletag.pubads().enableSingleRequest();
+        googletag.enableServices();
+  });
+</script>
+<div id="cnblogs_c1" class="c_ad_block">
+    <div id="div-gpt-ad-1546353474406-0" style="height:250px; width:300px;" data-google-query-id="CIierJvx_-ICFcIxYAodnMcDKQ"><div id="google_ads_iframe_/1090369/C1_0__container__" style="border: 0pt none;"><iframe id="google_ads_iframe_/1090369/C1_0" title="3rd party ad content" name="google_ads_iframe_/1090369/C1_0" scrolling="no" marginwidth="0" marginheight="0" style="border: 0px none; vertical-align: bottom;" srcdoc="" data-google-container-id="1" data-load-complete="true" width="300" height="250" frameborder="0"></iframe></div></div>
+</div>
+<div id="under_post_news"><div class="recomm-block"><b>相关博文：</b><br>·  <a href="https://www.cnblogs.com/lanyangsh/p/7782795.html" target="_blank" onclick="clickRecomItmem(7782795)">kafka 安装与配置</a><br>·  <a href="https://www.cnblogs.com/zhaopengcheng/p/9824546.html" target="_blank" onclick="clickRecomItmem(9824546)">windows环境使用kafka</a><br>·  <a href="https://www.cnblogs.com/shike8080/p/6483123.html" target="_blank" onclick="clickRecomItmem(6483123)">Window下配置Kafka以及Zookeeper环境</a><br>·  <a href="https://www.cnblogs.com/coderdxj/p/9598479.html" target="_blank" onclick="clickRecomItmem(9598479)">kafka介绍</a><br>·  <a href="https://www.cnblogs.com/coloz/p/10487679.html" target="_blank" onclick="clickRecomItmem(10487679)">Kafka在window上安装部署</a><br></div></div>
+<div id="cnblogs_c2" class="c_ad_block">
+    <div id="div-gpt-ad-1539008685004-0" style="height:60px; width:468px;" data-google-query-id="CNnurZvx_-ICFcIxYAodnMcDKQ"><div id="google_ads_iframe_/1090369/C2_0__container__" style="border: 0pt none;"><iframe id="google_ads_iframe_/1090369/C2_0" title="3rd party ad content" name="google_ads_iframe_/1090369/C2_0" scrolling="no" marginwidth="0" marginheight="0" style="border: 0px none; vertical-align: bottom;" srcdoc="" data-google-container-id="2" data-load-complete="true" width="468" height="60" frameborder="0"></iframe></div></div>
+</div>
+<div id="under_post_kb"><div class="itnews c_ad_block"><b>最新新闻</b>：<br> ·  <a href="https://news.cnblogs.com/n/627258/" target="_blank">盖茨：最大的失误是没能做好手机系统对抗苹果</a><br> ·  <a href="https://news.cnblogs.com/n/627257/" target="_blank">NASA：通过月壤也能研究太阳历史和生命演化进程</a><br> ·  <a href="https://news.cnblogs.com/n/627256/" target="_blank">它来自星辰，只是曾让地狱借了去</a><br> ·  <a href="https://news.cnblogs.com/n/627255/" target="_blank">谷歌对Intel 10nm进度不满：Chrome OS将不支持Ice Lake</a><br> ·  <a href="https://news.cnblogs.com/n/627254/" target="_blank">开启新一轮降价，AWS 加速在华布局</a><br>» <a href="http://news.cnblogs.com/" title="IT新闻" target="_blank">更多新闻...</a></div></div>
+<div id="HistoryToday" class="c_ad_block"></div>
+<script type="text/javascript">
+ if(enablePostBottom()) {
+    codeHighlight();
+    fixPostBody();
+    setTimeout(function () { incrementViewCount(cb_entryId); }, 50);
+    deliverT2();
+    deliverC1();
+    deliverC2();    
+    loadNewsAndKb();
+    loadBlogSignature();
+    LoadPostInfoBlock(cb_blogId, cb_entryId, cb_blogApp, cb_blogUserGuid);
+    GetPrevNextPost(cb_entryId, cb_blogId, cb_entryCreatedDate, cb_postType);
+    loadOptUnderPost();
+    GetHistoryToday(cb_blogId, cb_blogApp, cb_entryCreatedDate);  
+}
+</script>
+</div>
+
+    
+	
+<p id="footer">
+	Powered by: 
+	<br>
+	
+	<a id="Footer1_Hyperlink3" name="Hyperlink1" href="https://www.cnblogs.com/" style="font-family:Verdana;font-size:12px;">博客园</a>
+	<br>
+	Copyright © 行而思
+</p>
+</div>
+<div id="rightmenu">
+	
+		<div id="blog-calendar" style=""><table id="blogCalendar" class="Cal" title="Calendar" cellspacing="0" cellpadding="0">
+	<tbody><tr><td colspan="7"><table class="CalTitle" cellspacing="0">
+		<tbody><tr><td class="CalNextPrev"><a href="javascript:void(0);" onclick="loadBlogCalendar('2019/05/01');return false;">&lt;</a></td><td align="center">2019年6月</td><td class="CalNextPrev" align="right"><a href="javascript:void(0);" onclick="loadBlogCalendar('2019/07/01');return false;">&gt;</a></td></tr>
+	</tbody></table></td></tr><tr><th class="CalDayHeader" abbr="日" scope="col" align="center">日</th><th class="CalDayHeader" abbr="一" scope="col" align="center">一</th><th class="CalDayHeader" abbr="二" scope="col" align="center">二</th><th class="CalDayHeader" abbr="三" scope="col" align="center">三</th><th class="CalDayHeader" abbr="四" scope="col" align="center">四</th><th class="CalDayHeader" abbr="五" scope="col" align="center">五</th><th class="CalDayHeader" abbr="六" scope="col" align="center">六</th></tr><tr><td class="CalOtherMonthDay" align="center">26</td><td class="CalOtherMonthDay" align="center">27</td><td class="CalOtherMonthDay" align="center">28</td><td class="CalOtherMonthDay" align="center">29</td><td class="CalOtherMonthDay" align="center">30</td><td class="CalOtherMonthDay" align="center">31</td><td class="CalWeekendDay" align="center">1</td></tr><tr><td class="CalWeekendDay" align="center">2</td><td align="center">3</td><td align="center">4</td><td align="center">5</td><td align="center">6</td><td align="center">7</td><td class="CalWeekendDay" align="center">8</td></tr><tr><td class="CalWeekendDay" align="center">9</td><td align="center">10</td><td align="center">11</td><td align="center">12</td><td align="center">13</td><td align="center">14</td><td class="CalWeekendDay" align="center">15</td></tr><tr><td class="CalWeekendDay" align="center">16</td><td align="center">17</td><td align="center">18</td><td align="center">19</td><td align="center">20</td><td align="center">21</td><td class="CalWeekendDay" align="center">22</td></tr><tr><td class="CalTodayDay" align="center">23</td><td align="center">24</td><td align="center">25</td><td align="center">26</td><td align="center">27</td><td align="center">28</td><td class="CalWeekendDay" align="center">29</td></tr><tr><td class="CalWeekendDay" align="center">30</td><td class="CalOtherMonthDay" align="center">1</td><td class="CalOtherMonthDay" align="center">2</td><td class="CalOtherMonthDay" align="center">3</td><td class="CalOtherMonthDay" align="center">4</td><td class="CalOtherMonthDay" align="center">5</td><td class="CalOtherMonthDay" align="center">6</td></tr>
+</tbody></table></div><script type="text/javascript">loadBlogDefaultCalendar();</script>
+		
+<h3>导航</h3>
+<ul>
+			<li><a id="blog_nav_sitehome" href="https://www.cnblogs.com/">博客园</a></li>
+			<li><a id="blog_nav_myhome" href="https://www.cnblogs.com/shej123/">首页</a></li>
+			<li><a id="blog_nav_newpost" rel="nofollow" href="https://i.cnblogs.com/EditPosts.aspx?opt=1">新随笔</a></li>
+			<li><a id="blog_nav_contact" accesskey="9" rel="nofollow" href="https://msg.cnblogs.com/send/%E8%A1%8C%E8%80%8C%E6%80%9D">联系</a></li>
+			<li><a id="blog_nav_rss" href="https://www.cnblogs.com/shej123/rss">订阅</a><a id="blog_nav_rss_image" href="https://www.cnblogs.com/shej123/rss"><img src="Kafka%E5%9C%A8windows%E4%B8%8B%E7%9A%84%E9%85%8D%E7%BD%AE%E4%BD%BF%E7%94%A8%20-%20%E8%A1%8C%E8%80%8C%E6%80%9D%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/xml.gif" alt="订阅"></a>
+			</li><li><a id="blog_nav_admin" rel="nofollow" href="https://i.cnblogs.com/">管理</a></li>
+</ul>
+		<div id="blog_stats">
+<h3>统计</h3>
+	<ul>
+		<li>随笔 - 26
+		</li><li>文章 - 3
+		</li><li>评论 - 1
+		</li><li>引用 - 0
+	</li>
+</ul></div>
+		
+<h3>公告</h3>
+	<div id="blog-news"><div id="profile_block">昵称：<a href="https://home.cnblogs.com/u/shej123/">行而思</a><br>园龄：<a href="https://home.cnblogs.com/u/shej123/" title="入园时间：2015-01-26">4年4个月</a><br>粉丝：<a href="https://home.cnblogs.com/u/shej123/followers/">0</a><br>关注：<a href="https://home.cnblogs.com/u/shej123/followees/">7</a><div id="p_b_follow"><a href="javascript:void(0);" onclick="follow('2257127b-23a5-e411-b908-9dcfd8948a71')">+加关注</a></div><script>getFollowStatus('2257127b-23a5-e411-b908-9dcfd8948a71')</script></div></div><script type="text/javascript">loadBlogNews();</script>
+
+		<div id="blog-sidecolumn"><div id="sidebar_search" class="sidebar-block">
+<div id="sidebar_search" class="mySearch">
+<h3 class="catListTitle">搜索</h3>
+<div id="sidebar_search_box">
+<div id="widget_my_zzk" class="div_my_zzk"><input type="text" id="q" onkeydown="return zzk_go_enter(event);" class="input_my_zzk">&nbsp;<input onclick="zzk_go()" type="button" value="找找看" id="btnZzk" class="btn_my_zzk"></div>
+<div id="widget_my_google" class="div_my_zzk"><input type="text" name="google_q" id="google_q" onkeydown="return google_go_enter(event)" class="input_my_zzk">&nbsp;<input onclick="google_go()" type="button" value="谷歌搜索" class="btn_my_zzk"></div>
+</div>
+</div>
+
+</div><div id="sidebar_shortcut" class="sidebar-block">
+<h3 class="catListTitle">常用链接</h3>
+<ul>
+<li><a href="https://www.cnblogs.com/shej123/p/" title="我的博客的随笔列表">我的随笔</a></li><li><a href="https://www.cnblogs.com/shej123/MyComments.html" title="我发表过的评论列表">我的评论</a></li><li><a href="https://www.cnblogs.com/shej123/OtherPosts.html" title="我评论过的随笔列表">我的参与</a></li><li><a href="https://www.cnblogs.com/shej123/RecentComments.html" title="我的博客的评论列表">最新评论</a></li><li><a href="https://www.cnblogs.com/shej123/tag/" title="我的博客的标签列表">我的标签</a></li>
+</ul>
+<div id="itemListLin_con" style="display:none;">
+
+</div></div><div id="sidebar_toptags" class="sidebar-block"></div><div id="sidebar_categories">
+		<h3>随笔分类</h3>
+		
+				<ul>
+			
+				<li><a id="CatList_LinkList_0_Link_0" href="https://www.cnblogs.com/shej123/category/1378841.html">JAVA基础(2)</a> </li>
+			
+				<li><a id="CatList_LinkList_0_Link_1" href="https://www.cnblogs.com/shej123/category/654289.html">生活感触(1)</a> </li>
+			
+				<li><a id="CatList_LinkList_0_Link_2" href="https://www.cnblogs.com/shej123/category/1378843.html">数据库</a> </li>
+			
+				<li><a id="CatList_LinkList_0_Link_3" href="https://www.cnblogs.com/shej123/category/738823.html">下载备份</a> </li>
+			
+				</ul>
+			
+	
+		<h3>随笔档案</h3>
+		
+				<ul>
+			
+				<li><a id="CatList_LinkList_1_Link_0" href="https://www.cnblogs.com/shej123/archive/2019/04.html">2019年4月 (2)</a> </li>
+			
+				<li><a id="CatList_LinkList_1_Link_1" href="https://www.cnblogs.com/shej123/archive/2019/02.html">2019年2月 (2)</a> </li>
+			
+				<li><a id="CatList_LinkList_1_Link_2" href="https://www.cnblogs.com/shej123/archive/2019/01.html">2019年1月 (12)</a> </li>
+			
+				<li><a id="CatList_LinkList_1_Link_3" href="https://www.cnblogs.com/shej123/archive/2018/02.html">2018年2月 (4)</a> </li>
+			
+				<li><a id="CatList_LinkList_1_Link_4" href="https://www.cnblogs.com/shej123/archive/2018/01.html">2018年1月 (3)</a> </li>
+			
+				<li><a id="CatList_LinkList_1_Link_5" href="https://www.cnblogs.com/shej123/archive/2017/12.html">2017年12月 (1)</a> </li>
+			
+				<li><a id="CatList_LinkList_1_Link_6" href="https://www.cnblogs.com/shej123/archive/2015/02.html">2015年2月 (1)</a> </li>
+			
+				<li><a id="CatList_LinkList_1_Link_7" href="https://www.cnblogs.com/shej123/archive/2015/01.html">2015年1月 (1)</a> </li>
+			
+				</ul>
+			
+	</div><div id="sidebar_recentcomments" class="sidebar-block"><div id="recent_comments_wrap">
+<h3 class="catListTitle">最新评论</h3>
+<div class="RecentComment" id="RecentComments">
+	<div id="RecentCommentsBlock"><ul>
+        <li class="recent_comment_title"><a href="https://www.cnblogs.com/shej123/p/10248515.html#4244038">1. Re:关于cron4j的使用</a></li>
+        <li class="recent_comment_body">请问你有支持秒的cron4j jar包么</li>
+        <li class="recent_comment_author">--亲爱的Joe</li>
+</ul>
+</div>
+</div>
+</div></div><div id="sidebar_topviewedposts" class="sidebar-block"><div id="topview_posts_wrap">
+<h3 class="catListTitle">阅读排行榜</h3>
+<div class="RecentComment" id="TopViewPosts"> 
+	<div id="TopViewPostsBlock"><ul><li><a href="https://www.cnblogs.com/shej123/p/8043250.html">1. 关于使用itext转Html为pdf添加css样式的问题(3440)</a></li><li><a href="https://www.cnblogs.com/shej123/p/4288721.html">2. 解决 myEclipse与tomcat 不同步的问题(2762)</a></li><li><a href="https://www.cnblogs.com/shej123/p/8408847.html">3. 关于post xml的请求和响应(857)</a></li><li><a href="https://www.cnblogs.com/shej123/p/10239145.html">4. 读取FTP上的excel文件，并写入数据库(684)</a></li><li><a href="https://www.cnblogs.com/shej123/p/10312806.html">5. idea tomcat 乱码问题的解决及相关设置(564)</a></li></ul></div>
+</div>
+</div></div><div id="sidebar_topcommentedposts" class="sidebar-block"><div id="topfeedback_posts_wrap">
+<h3 class="catListTitle">评论排行榜</h3>
+<div class="RecentComment" id="TopCommentsPosts">
+	<div id="TopFeedbackPostsBlock"><ul><li><a href="https://www.cnblogs.com/shej123/p/10248515.html">1. 关于cron4j的使用(1)</a></li></ul></div>
+</div></div></div><div id="sidebar_topdiggedposts" class="sidebar-block"><div id="topdigg_posts_wrap">
+<h3 class="catListTitle">推荐排行榜</h3>
+<div class="RecentComment">
+	<div id="TopDiggPostsBlock"><ul><li><a href="https://www.cnblogs.com/shej123/p/4288721.html">1. 解决 myEclipse与tomcat 不同步的问题(1)</a></li></ul></div>
+</div></div></div></div><script type="text/javascript">loadBlogSideColumn();</script>
+	
+</div>
+			
+			
+			
+			
+			 
+
+	
+
+
+
+
+</body></html>

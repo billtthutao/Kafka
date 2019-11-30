@@ -1,0 +1,61 @@
+﻿1、下载
+
+下载地址：http://kafka.apache.org/downloads.html ，我用的是kafka_2.12-1.0.0.tgz版本。有兴趣的可以下载最新办法。
+
+2、下载完成之后，直接解压到c:\
+
+3、修改配置参数
+
+进入config目录，编辑 server.properties文件，找到并编辑log.dirs= c:\\kafka_2.12-2.2.1\\logs，找到并编辑zookeeper.connect=localhost:2181。表示本地运行。
+
+(Kafka会按照默认，在9092端口上运行，并连接zookeeper的默认端口：2181)
+
+4、启动服务，在dos服务下输入下面命令进行启动
+
+c:\kafka_2.12-2.2.1\bin\windows\zookeeper-server-start.bat c:\kafka_2.12-2.2.1\config\zookeeper.properties
+
+首先启动，zookeeper服务，对应加载zookeeper的配置文件，kafka依赖zookeeper监控其状态
+
+c:\kafka_2.12-2.2.1\bin\windows\kafka-server-start.bat c:\kafka_2.12-2.2.1\config\server.properties
+
+然后启动kafka服务，对应加载相应配置文件
+
+5.       第一个消息
+创建一个topic
+
+　　　　Kafka通过topic对同一类的数据进行管理，同一类的数据使用同一个topic可以在处理数据时更加的便捷
+
+　　　　在kafka解压目录打开终端，输入
+
+　　　　c:\kafka_2.12-2.2.1\bin\windows\kafka-topics.bat --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test
+
+　　　　创建一个名为test的topic
+
+在创建topic后可以通过输入
+
+            c:\kafka_2.12-2.2.1\bin\windows\kafka-topics.bat --list --zookeeper localhost:2181
+
+   来查看已经创建的topic
+
+    创建一个消息消费者
+
+　　　在kafka解压目录打开终端，输入
+
+　　　　c:\kafka_2.12-2.2.1\bin\windows\kafka-console-consumer.bat --bootstrap-server localhost:9092 --topic test --from-beginning
+
+　　　可以创建一个用于消费topic为test的消费者
+
+
+ 消费者创建完成之后，因为还没有发送任何数据，因此这里在执行后没有打印出任何数据
+
+         不过别着急，不要关闭这个终端，打开一个新的终端，接下来我们创建第一个消息生产者
+
+      创建一个消息生产者
+
+　　　　在kafka解压目录打开一个新的终端，输入
+
+　　　　c:\kafka_2.12-2.2.1\bin\windows\kafka-console-producer.bat --broker-list localhost:9092 --topic test
+
+　　　　在执行完毕后会进入的编辑器页面
+
+在发送完消息之后，可以回到我们的消息消费者终端中，可以看到，终端中已经打印出了我们刚才发送的消息

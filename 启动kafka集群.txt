@@ -1,0 +1,426 @@
+1. 创建网络
+docker network create --subnet=172.19.0.0/24 br17219
+
+2. 创建docker-compose.yml
+
+version: '3.1'
+
+services:
+  zoo1:
+    image: zookeeper
+    restart: always
+    hostname: zoo1
+    container_name: zoo1
+    ports:
+      - 2181:2181
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=172.19.0.11:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=zoo3:2888:3888;2181
+    networks:
+      br17219:
+        ipv4_address: 172.19.0.11
+        
+  zoo2:
+    image: zookeeper
+    restart: always
+    hostname: zoo2
+    container_name: zoo2
+    ports:
+      - 2182:2181
+    environment:
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: server.1=zoo1:2888:3888;2181 server.2=172.19.0.12:2888:3888;2181 server.3=zoo3:2888:3888;2181
+    networks:
+      br17219:
+        ipv4_address: 172.19.0.12
+        
+  zoo3:
+    image: zookeeper
+    restart: always
+    hostname: zoo3
+    container_name: zoo3
+    ports:
+      - 2183:2181
+    environment:
+      ZOO_MY_ID: 3
+      ZOO_SERVERS: server.1=zoo1:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=172.19.0.13:2888:3888;2181
+    networks:
+      br17219:
+        ipv4_address: 172.19.0.13
+
+  kafka1:
+    image: wurstmeister/kafka
+    restart: always
+    hostname: kafka1
+    container_name: kafka1
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka1
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2181,zoo3:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092
+      KAFKA_LISTENERS: PLAINTEXT://kafka1:9092
+      KAFKA_BROKER_ID: 1
+    external_links:
+      - zoo1
+      - zoo2
+      - zoo3
+    networks:
+      br17219:
+        ipv4_address: 172.19.0.14
+
+  kafka2:
+    image: wurstmeister/kafka
+    restart: always
+    hostname: kafka2
+    container_name: kafka2
+    ports:
+      - 9093:9093
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka2
+      KAFKA_ADVERTISED_PORT: 9093
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2181,zoo3:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:9093
+      KAFKA_LISTENERS: PLAINTEXT://kafka2:9093
+      KAFKA_BROKER_ID: 2
+    external_links:
+      - zoo1
+      - zoo2
+      - zoo3
+    networks:
+      br17219:
+        ipv4_address: 172.19.0.15
+
+  kafka3:
+    image: wurstmeister/kafka
+    restart: always
+    hostname: kafka3
+    container_name: kafka3
+    ports:
+      - 9094:9094
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka3
+      KAFKA_ADVERTISED_PORT: 9094
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2181,zoo3:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:9094
+      KAFKA_LISTENERS: PLAINTEXT://kafka3:9094
+      KAFKA_BROKER_ID: 3
+    external_links:
+      - zoo1
+      - zoo2
+      - zoo3
+    networks:
+      br17219:
+        ipv4_address: 172.19.0.16
+
+networks:
+  br17219:
+    external:
+      name: br17219
+
+注意：
+KAFKA_ADVERTISED_LISTENERS 和 KAFKA_LISTENERS里面的endpoint需要和后面的API一致
+比如这里是kafka1:9092, 后面API里面也用这个 kafka-console-producer.sh --broker-list kafka1:9092,kafka2:9092,kafka3:9092 --topic test1 
+另外这里的kafka1,kafka2,kafka3也可以用宿主机的IP来代替，对应的API里面也需要一致。
+
+3. 启动
+docker-compose up -d
+
+4. 更新hostname,添加如下item
+127.0.0.1 kafka1
+127.0.0.1 kafka2
+127.0.0.1 kafka3
+127.0.0.1 zoo1
+127.0.0.1 zoo2
+127.0.0.1 zoo3
+
+5. 进入容器
+docker exec -it zoo1 /bin/bash
+docker exec -it zoo2 /bin/bash
+docker exec -it zoo3 /bin/bash
+查看zookeeper状态
+./bin/zkServer.sh status
+查看kafka brokers
+./bin/zkCli.sh
+ls /brokers/ids
+
+docker exec -it kafka1 /bin/bash
+docker exec -it kafka2 /bin/bash
+docker exec -it kafka3 /bin/bash
+查看topic
+kafka-topics.sh --list --zookeeper zoo1:2181
+kafka-topics.sh --list --zookeeper zoo2:2181
+kafka-topics.sh --list --zookeeper zoo3:2181
+创建topic
+kafka-topics.sh --create --zookeeper zoo1:2181 --replication-factor 3 --partitions 3 --topic test1
+kafka-topics.sh --create --zookeeper zoo2:2181 --replication-factor 3 --partitions 3 --topic test2
+kafka-topics.sh --create --zookeeper zoo3:2181 --replication-factor 3 --partitions 3 --topic test3
+
+发送消息
+kafka-console-producer.sh --broker-list kafka1:9092,kafka2:9092,kafka3:9092 --topic test1 
+
+订阅消息
+kafka-console-consumer.sh --bootstrap-server kafka1:9092,kafka2:9092,kafka3:9092 --topic test1 --from-beginning
+
+windows:
+
+创建topic
+kafka-topics.bat --create --zookeeper zoo1:2181 --replication-factor 3 --partitions 3 --topic test1
+kafka-topics.bat --create --zookeeper zoo2:2182 --replication-factor 3 --partitions 3 --topic test2
+kafka-topics.bat --create --zookeeper zoo3:2183 --replication-factor 3 --partitions 3 --topic test3
+
+查看topic
+kafka-topics.bat --list --zookeeper zoo1:2181 
+kafka-topics.bat --list --zookeeper zoo2:2182
+kafka-topics.bat --list --zookeeper zoo3:2183
+
+发送消息
+kafka-console-producer.bat --broker-list kafka1:9092,kafka2:9093,kafka3:9094 --topic test1 
+
+订阅消息
+kafka-console-consumer.bat --bootstrap-server kafka1:9092,kafka2:9093,kafka3:9094 --topic test1 --from-beginning
+
+6 分区
+kafka里面的每个topic好比关系数据库里面的表。
+一般kafka会将消息平均分配到每个分区上，但是如果producer在发送消息的时候指定了Key,那么就会用这个key来计算一个hash值，然后跟
+对应topic的分区数取模，然后放到对应的分区上。
+所以只有在不改变topic分区数量的情况下，key与分区之间的映射才能保持不变。
+每个分区同一时间只能由一个comsumer读取，同一个分区上的消息按发送顺序写入，然后按顺序读取，但是不同分区上的消息，无法保证读取的顺序和
+写入的顺序一致。
+所以不要让comsumer的数量超过topic的分区数量，否则部分comsumer会被闲置.
+
+除了通过增加消费者来横向伸缩单个应用程序外，还经常出现多个应用程序从同一个主题
+读取数据的情况。实际上， Kafka 设计的主要目标之一，就是要让Kafka 主题里的数据能
+够满足企业各种应用场景的需求。在这些场景里，每个应用程序可以获取到所有的消息，
+而不只是其中的一部分。只要保证每个应用程序有自己的消费者群组，就可以让它们获取
+到主题所有的消息。不同于传统的消息系统，横向伸缩Kafka 消费者和消费者群组并不会
+对性能造成负面影响。
+
+在上面的例子里，如果新增一个只包含一个消费者的群组G2 ，那么这个消费者将从主题
+Tl 上接收所有的消息，与群组Gl 之间互不影响。群组G2 可以增加更多的消费者，每个
+消费者可以悄费若干个分区，就像群组Gl 那样，如图4-5 所示。总的来说，群组G2 还是
+会接收到所有消息，不管有没有其他群组存在。
+
+简而言之，为每一个需要获取一个或多个主题全部消息的应用程序创建一个消费者群组，
+然后往群组里添加消费者来伸缩读取能力和处理能力，群组里的每个消费者只处理一部分
+消息。
+
+7 再平衡及轮询
+分区的所有权从一个消费者转移到另一个消费者，这样的行为被称为再均衡。再均衡非常
+重要， 它为1肖费者群组带来了高可用性和伸缩性（我们可以放心地添加或移除梢费者），
+不过在正常情况下，我们并不希望发生这样的行为。在再均衡期间，消费者无陆读取消
+息，造成整个群组一小段时间的不可用。另外，当分区被重新分配给另一个消费者时，消
+费者当前的读取状态会丢失，它有可能还需要去刷新缓存，在它重新恢复状态之前会拖慢
+应用程序。我们将在本章讨论如何进行安全的再均衡，以及如何避免不必要的再均衡。
+
+消费者通过向被指派为群组协调器的broker （不同的群组可以有不同的协调器）发送心跳
+来维持它们和群组的从属关系以及它们对分区的所有权关系。只要消费者以正常的时间
+间隔发送心跳，就被认为是活跃的，说明它还在读取分区里的消息。消费者会在轮询消息
+（为了获取消息）或提交偏移量时发送心跳。如果消费者停止发送心跳的时间足够长，会
+话就会过期，群组协调器认为它已经死亡，就会触发一次再均衡。
+
+如果一个消费者发生崩愤，井停止读取消息，群组协调器会等待几秒钟，确认它死亡了才
+会触发再均衡。在这几秒钟时间里，死掉的消费者不会读取分区里的消息。在清理消费者
+时，消费者会通知协调器它将要离开群组，协调器会立即触发一次再均衡，尽量降低处理
+停顿。
+
+max.poll.interval.ms 设定轮询的间隔
+session.timeout.ms 用于控制检测consumer发生崩溃的时间和停止发送心跳的时间。
+该属性指定了消费者在被认为死亡之前可以与服务器断开连接的时间
+heartbeat.interval.ms 指定了poll()方法向协调器发送心跳的频率.
+heartbeat.interval.ms需要比session.timeout.ms小，一般是其1/3.
+
+8 提交和偏移量
+每次调用poll （） 方毡，它总是返回由生产者写入Kafka 但还没有被消费者读取过的记录，
+那么消费者是如何提交偏移量的呢？消费者往一个叫作＿consul'ler_offset 的特殊主题发送
+消息，消息里包含每个分区的偏移量。
+
+最简单的提交方式是让悄费者自动提交偏移量。如果enableauto.commit被设为true ，那
+么每过5s，消费者会自动把从poll()方法接收到的最大偏移量提交上去。提交时间间隔
+由auto.commit.interval.ms控制，默认值是5s 。与梢费者里的其他东西一样，自动提交
+也是在轮询里进行的。消费者每次在进行轮询时会检查是否该提交偏移量了，如果是，那
+么就会提交从上一次轮询返回的偏移量。
+
+还可以手动提交
+把enableauto.commit设为false ，让应用程序决定何时提交偏移量。使用commitSync()
+提交偏移量最简单也最可靠。这个A PI 会提交由poll （） 方能返回的最新偏移量，提交成
+功后马上返回，如果提交失败就抛出异常。
+consumer.commitSync()
+
+手动提交有一个不足之处，在broker对提交请求作出回应之前，应用程序会一直阻塞，这
+样会限制应用程序的吞吐量。我们可以通过降低提交频率来提升吞吐量，但如果发生了再
+均衡， 会增加重复消息的数量。
+这个时候可以使用异步提交A PI 。我们只管发送提交请求，无需等待broker 的响应。
+consumer.commitAsync();
+
+在成功提交或碰到无怯恢复的错误之前， commitSync()会一直重试，但是commitAsync()
+不会，这也是commitAsync()不好的一个地方。它之所以不进行重试，是因为在它收到
+服务器响应的时候，可能有一个更大的偏移量已经提交成功。假设我们发出一个请求用
+于提交偏移量2000 ，这个时候发生了短暂的通信问题，服务器收不到请求，自然也不会
+作出任何响应。与此同时，我们处理了另外一批消息，并成功提交了偏移量3000 。如果
+commitAsync()重新尝试提交偏移量2000 ，它有可能在偏移量3000 之后提交成功。这个时
+候如果发生再均衡，就会出现重复消息。
+
+提交偏移量的频率与处理消息批次的频率是一样的。但如果想要更频繁地提交出怎么办？
+如果p oll （） 方告返回一大批数据，为了避免因再均衡引起的重复处理整批消息，想要在批
+次中间提交偏移韭该怎么办？这种情况无法通过调用commitSync()或commitAsync()来实
+现，因为它们只会提交最后一个偏移量，而此时该批次里的消息还没有处理完。
+幸运的是，消费者API 允许在调用commitSync()或commitAsync()方法时传进去希望提交
+的分区和偏移量的map 。
+
+9 深入kafka 
+-broker, controller, leader
+Kafka 使用Zoo keeper 来维护集群成员的信息。每个broker 都有一个唯一标识符，这个
+标识符可以在配置文件里指定，也可以自动生成。在broker 启动的时候，它通过创建
+临时节点把自己的ID 注册到Zookeeper 。Kafka 组件订阅Zoo keeper 的／brokers/ids 路径
+(bro ker 在Zoo keeper 上的注册路径），当有broker 加入集群或退出集群时，这些组件就
+可以获得通知。
+
+如果你要启动另一个具有相同ID 的broker ，会得到一个错误一一新broker 会试着进行注
+册，但不会成功，因为Zoo keeper 里已经有一个具有相同ID 的broker 。
+
+控制器其实就是一个broker ，只不过它除了具有一般broker 的功能之外，还负责分区
+首领的选举（我们将在5.3 节讨论分区首领选举）。集群里第一个启动的broker 通过在
+Zooke巳per 里创建一个临时节点／ cont 「olle 「让自己成为控制器。其他broker 在启动时也
+会尝试创建这个节点，不过它们会收到一个“节点已存在”的异常，然后“意识”到控制
+器节点已存在，也就是说集群里已经有一个控制器了。其他broker 在控制器节点上创建
+Zookeeper wat ch 对象，这样它们就可以收到这个节点的变更通知。这种方式可以确保集群
+里一次只有一个控制器存在。
+
+如果控制器被关闭或者与Zookeeper 断开连接， Zookeeper 上的临时节点就会消失。集群
+里的其他broker 通过watch 对象得到控制器节点消失的通知，它们会尝试让自己成为新的
+控制器。第一个在Zookeeper 里成功创建控制器节点的broker 就会成为新的控制器，其他
+节点会收到“节点已存在”的异常，然后在新的控制器节点上再次创建watch 对象。每个
+新选出的控制器通过Zookeeper 的条件递增操作获得一个全新的、数值更大的controlle r
+e poch 。其他broker 在知道当前c o n t 「o ll e 「epoc h 后，如果收到由控制器发出的包含较旧
+epoch 的消息，就会忽略它们。
+
+当控制器发现一个broker 已经离开集群（通过观察相关的Zookeeper 路径），它就知道，那
+些失去首领的分区需要一个新首领（这些分区的首领刚好是在这个broker 上）。控制器遍
+历这些分区，并确定谁应该成为新首领（简单来说就是分区副本列表里的下一个副本），
+然后向所有包含新首领或现有跟随者的broker 发送请求。该请求消息包含了谁是新首领以
+及谁是分区跟随者的信息。随后，新首领开始处理来自生产者和消费者的请求，而跟随者
+开始从新首领那里复制消息。
+
+当控制器发现一个broker 加入集群时，它会使用broker ID来检查新加入的broker 是否包
+含现有分区的副本。如果有，控制器就把变更通知发送给新加入的broker 和其他broker,
+新broker 上的副本开始从首领那里复制消息。
+
+简而言之， Kafka 使用Zoo keeper 的临时节点来选举控制器， 并在节点加入集群或退出集
+群时通知控制器。控制器负责在节点加入或离开集群时进行分区首领选举。控制器使用
+epoch 来避免“脑裂” 。“脑裂”是指两个节点同时认为自己是当前的控制器。
+
+- topic, partition
+Kafka 使用主题来组织数据，每个主题被分为若干个分区，每个分区有多个副本。那些副
+本被保存在broker 上，每个broker 可以保存成百上千个属于不同主题和分区的副本。
+
+首领副本
+每个分区都有一个首领副本。为了保证一致性，所有生产者请求和消费者请求都会经过
+这个副本。
+
+跟随者副本
+首领以外的副本都是跟随者副本。跟随者副本不处理来自客户端的请求，它们唯一的任
+务就是从首领那里复制消息，保持与首领一致的状态。如果首领发生崩渍，其中的一个
+跟随者会被提升为新首领。
+
+为了与首领保持同步，跟随者向首领发送获取数据的请求，这种请求与悄费者为了读取悄
+息而发送的请求是一样的。首领将响应消息发给跟随者。请求消息里包含了跟随者想要获
+取消息的偏移量，而且这些偏移量总是有序的。
+
+如果跟随者在10 s 内没有请求任何消息，或者虽然在请求消
+息，但在10s 内没有请求最新的数据，那么它就会被认为是不同步的。如果一个副本无陆
+与首领保持一致，在首领发生失效时，它就不可能成为新首领一一毕竟它没有包含全部的
+消息。
+
+相反，持续请求得到的最新悄息副本被称为同步的副本。在首领发生失效时，只有同步副
+本才有可能被选为新首领。
+
+Kafka 的主题被分为多个分区，分区是基本的数据块。分区存储在单个磁盘上， Kafka 可以
+保证分区里的事件是有序的，分区可以在线（可用），也可以离线（不可用） 。每个分区可
+以有多个副本，其中一个副本是首领。所有的事件都直接发送给首领副本，或者直接从首
+领副本读取事件。其他副本只需要与首领保持同步，并及时复制最新的事件。当首领副本
+不可用时，其中一个同步副本将成为新首领。
+
+- 分区分配
+在创建主题时， Kafka 首先会决定如何在broker 间分配分区。假设你有6 个broker ，打算
+创建一个包含10 个分区的主题，并且复制系数为3 。那么Kafka 就会有30 个分区副本，
+它们可以被分配给6 个broker。在进行分区分配时，我们要达到如下的目标。
+在broker 间平均地分布分区副本。对于我们的例子来说，就是要保证每个broker 可以
+分到5 个副本。
+确保每个分区的每个副本分布在不同的broker 上。假设分区0 的首领副本在broker 2 上，
+那么可以把跟随者副本放在brok巳r 3 和broker 4 上，但不能放在broker 2 上，也不能两
+个都放在broker 3 上。
+如果为broker 指定了机架信息，那么尽可能把每个分区的副本分配到不同机架的br咄er
+上。这样做是为了保证一个机架的不可用不会导致整体的分区不可用。
+为了实现这个目标，我们先随机选择一个broker （假设是4 ），然后使用轮询的方式给每
+个broker 分配分区来确定首领分区的位置。于是，首领分区0 会在broker 4 上，首领分区
+l 会在broker 5 上，首领分区2 会在broker O 上（只有6 个broker ），并以此类推。然后，
+我们从分区首领开始，依次分配跟随者副本。如果分区0 的首领在broker 4 上，那么它的
+第一个跟随者副本会在broker 5 上，第二个跟随者副本会在broker O 上。分区l 的首领在
+broker 5 上，那么它的第一个跟随者副本在broker O 上，第二个跟随者副本在broker l 上。
+
+
+10 kafka的保证
+那么Kafka 可以在哪些方面作出保证呢？
+• Kafka 可以保证分区消息的顺序。如果使用同一个生产者往同一个分区写入消息，而且
+消息B 在悄息A 之后写入，那么Kafka 可以保证消息B 的偏移量比消息A 的偏移量大，
+而且消费者会先读取消息A 再读取消息B 。
+• 只有当消息被写入分区的所有同步副本时（但不一定要写入磁盘），它才被认为是“ 已
+提交”的。生产者可以选择接收不同类型的确认，比如在消息被完全提交时的确认，或
+者在消息被写入首领副本时的确认，或者在消息被发送到网络时的确认。
+• 只要还有一个副本是活跃的，那么已经提交的消息就不会丢失。
+• 消费者只能读取已经提交的悄息。
+
+11 kafka connect
+更准确地说，Connect的作用是Kafka与其他数据源之间的导入导出。
+支持的是对存储在Kafka上的流数据进行实时处理，也就是说数据已经存在Kafka上面了。
+所以如果你现在的架构已经近似于：
+数据源（比如数据库，前端Web Server，传感器..）－> Kafka -> Storm / Spark -> 数据接收（比如Elastic，HDFS／HBase，Cassandra，数据仓库..）
+
+那这个架构是完全可以用Kafka Connect ＋ Kafka Streams，也就是：数据源 －> Kafka Connect －> Kafka －> Kafka Streams －> Kafka －> Kafka Connect －> 数据接收
+
+https://hub.docker.com/r/landoop/fast-data-dev/
+
+12 管理kafka
+--topic
+创建topic
+kafka-topics.sh --zookeeper zoo1.example.com:2181/kafka-cluster --create --topic my-topic --replication-factor 2 --partitions 8
+添加分区
+kafka-topics.sh --zookeeper zoo1.example.com:2181/kafka-cluster --alter --topic my-topic --partitions 16
+删除topic
+kafka-topics.sh --zookeeper zoo1.example.com:2181/kafka-cluster --delete --topic my-topic
+列出所有topic
+kafka-topics.sh --zookeeper zoo1.example.com:2181/kafka-cluster --list
+列出topic详细信息
+kafka-topics.sh --zookeeper zoo1.example.com:2181/kafka-cluster --describe
+kafka-topics.sh --zookeeper zoo1.example.com:2181/kafka-cluster --describe --topic my-topic
+
+--consumer groups
+显示群组
+kafka-consumer-groups.sh --bootstrap-server kafka1.example.com:9092/kafka-cluster --list
+kafka-consumer-groups.sh --bootstrap-server kafka1.example.com:9092/kafka-cluster --describe --group testgroup
+sample:
+bash-4.4# kafka-consumer-groups.sh --bootstrap-server kafka1:9092 --describe --group test1
+
+GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                     HOST            CLIENT-ID
+test1           test1           0          1               1               0               consumer-1-fefdfe2c-8ebc-476d-bdb1-dbfd0439a8f8 /172.19.0.1     consumer-1
+
+GROUP 		消费者群组的名字
+TOPIC 		正在被读取的主题名字
+PARTITION 	正在被读取的分区ID
+CURRENT-OFFSET 	消费者群组最近提交的偏移量， 也就是消费者在分区里读取的当前位置
+LOG-END-OFFSET 	当前高水位偏移量， 也就是最近一个被读取消息的偏移量，同时也是最近一个被提 交到集群的偏移量
+LAG 		消费者的CURRENT- OFFSET 和broker 的LOG-END-OFFSET 之间的差距
+CONSUMER-ID 	消费者群组里正在读取该分区的消费者。这是一个消费者的ID， 不一定包含消费者的主机名
+删除群组
+kafka-consumer-groups.sh --bootstrap-server kafka1:9092 --delete --group testgroup
+
+--动态修改topic配置参数
+kafka-configs.sh --zookeeper zoo1.example.com:2181/kafka-cluster --alter --entity-type topics --entity-name <topic name> --add-config <key>=<value>[,<key>=<value>...]
+--动态修改客户端配置(比如consumer组群)
+kafka-configs.sh --zookeeper zoo1.example.com:2181/kafka-cluster --alter --entity-type clients --entity-name <client ID> --add-config <key>=<value>[,<key>=<value>...]
+--列出被覆盖的配置
+kafka-configs.sh --zookeeper zoo1.example.com:2181/kafka-cluster --describe --entity-type topics --entity-name my-topic
+--移除被覆盖的配置
+kafka-configs.sh --zookeeper zoo1.example.com:2181/kafka-cluster --alter --entity-type topics --entity-name my-topic --delete-config retention.ms
